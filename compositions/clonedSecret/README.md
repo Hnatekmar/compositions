@@ -14,14 +14,20 @@ kind: ClonedSecret
 metadata:
   name: clone
 spec:
+  # name of kubernetes provider that points to cluster you wicluster you wicluster you wicluster you wish to copy from
   src:
-    providerConfigRef: # name of k
+    providerConfigRef:
       name: local
+    # name of secret you wish to copy
     name: token
+    # nameespace from which you want to source the secret
     namespace: default
+  # name of kubernetes provider that points to cluster you wish to copy to
   dst:
     providerConfigRef:
       name: remote
+    # name of secret you wish to create in destination cluster
     name: cloned-token
+    # namespace where you wish to create the secret
     namespace: default
 ```
