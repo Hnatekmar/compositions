@@ -1,0 +1,46 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: clonedsecrets.hnatekmar.xyz
+spec:
+  group: hnatekmar.xyz
+  defaultCompositionRef:
+    name: cloned-secrets
+  names:
+    kind: ClonedSecret
+    plural: clonedsecrets
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                src:
+                  type: object
+                  properties:
+                    providerConfigRef:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                dst:
+                  type: object
+                  properties:
+                    providerConfigRef:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string

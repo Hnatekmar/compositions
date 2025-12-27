@@ -1,0 +1,83 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: cloned-secrets
+spec:
+  compositeTypeRef:
+    kind: ClonedSecret
+    apiVersion: hnatekmar.xyz/v1alpha1
+  mode: Pipeline
+  pipeline:
+    - step: observe-secret
+      functionRef:
+        name: kcl
+      input:
+        apiVersion: krm.kcl.dev/v1alpha1
+        kind: KCLInput
+        spec:
+          source: |
+            oxr = option("params").oxr
+            object = {
+              apiVersion = "kubernetes.crossplane.io/v1alpha2"
+              kind = "Object"
+              metadata = {
+                name = oxr.metadata.name + "-observed-secret"
+              }
+              spec = {
+                managementPolicies = ["Observe"]
+                forProvider = {
+                  manifest = {
+                    apiVersion = "v1"
+                    kind = "Secret"
+                    metadata = {
+                      name = oxr.spec.src.name
+                      namespace = oxr.spec.src.namespace
+                    }
+                  }
+                }
+                providerConfigRef = oxr.spec.src.providerConfigRef
+              }
+            }
+            items = [object]
+    - step: create-secret
+      functionRef:
+        name: kcl
+      input:
+        apiVersion: krm.kcl.dev/v1alpha1
+        kind: KCLInput
+        spec:
+          source: |
+            import base64
+
+            oxr = option("params").oxr
+            ocds = option("params").ocds
+
+            _items = []
+
+            _data = ocds?.secret?.Resource?.status?.atProvider?.manifest?.data or {dummy = base64.encode("Generating secret")}
+
+            _items = [{
+                apiVersion = "kubernetes.crossplane.io/v1alpha2"
+                kind = "Object"
+                metadata = {
+                  name = oxr.metadata.name + "-generated-secret"
+                }
+                spec = {
+                    managementPolicies = ["Create", "Update", "Observe"]
+                    forProvider.manifest = {
+                        apiVersion = "v1"
+                        kind = "Secret"
+                        metadata = {
+                            name = oxr.spec.dst.name
+                            namespace = oxr.spec.dst.namespace
+                        }
+                        data = _data
+                    }
+                    providerConfigRef = oxr.spec.dst.providerConfigRef
+                }
+            }]
+
+            items = _items
+    - step: auto-ready
+      functionRef:
+        name: function-auto-ready
