@@ -79,6 +79,8 @@ Copies a Kubernetes Secret from one cluster to another using the Crossplane Kube
    kubectl apply -f compositions/clonedSecret/functions.yaml
    ```
 
+   > **Note:** Before applying the functions.yaml, ensure your cluster can reach the required package registries (e.g., `xpkg.upbound.io`). If your cluster is air-gapped, uses a mirror registry, or needs custom pull secrets, you may need to configure registry mirroring or `packagePullSecrets` in the Crossplane ControllerConfig before the functions will become healthy.
+
 3. **Apply the Composition and XRD:**
    ```bash
    kubectl apply -f compositions/clonedSecret/xrd.yaml
